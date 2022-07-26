@@ -1,0 +1,1240 @@
+Index: class/Other.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Other.php b/class/Other.php
+new file mode 100644
+--- /dev/null	(date 1658589805961)
++++ b/class/Other.php	(date 1658589805961)
+@@ -0,0 +1,30 @@
++<?php
++class Other{
++
++
++public static function  currency()
++{
++preg_match_all('#"price":(.+?)"priceCurrency"#is', file_get_contents("https://minfin.com.ua/currency/"), $arr);
++    $bUsd = substr($arr[1][2], 0, -17);
++    $sUsd = substr($arr[1][3], 0, -17);
++    $bEur = substr($arr[1][7], 0, -17);
++    $sEur =  substr($arr[1][8], 0, -17);
++    $bPLN = substr($arr[1][12], 0, -17);
++    $sPLN = substr($arr[1][13], 0, -17);
++    $usd = 'Usd:'.PHP_EOL.'buy'.' -'.$bUsd.PHP_EOL.'sell'.' -'.$sUsd.PHP_EOL;
++    $eur = 'Eur:'.PHP_EOL.'buy'.' -'.$bEur.PHP_EOL.'sell'.' -'.$sEur.PHP_EOL;
++    $pln = 'Pln:'.PHP_EOL.'buy'.' -'.$bPLN.PHP_EOL.'sell'.' -'.$sPLN.PHP_EOL;
++    echo $usd.$eur.$pln;
++}
++public static function wether()
++{
++    preg_match_all('#"temperatureAir":(.+?)"temperatureWater"#is', file_get_contents("https://www.gismeteo.ua/weather-odessa-4982/now/"), $arr);
++    preg_match_all('#"temperatureWater":(.+?)"temperatureHeatIndex"#is', file_get_contents("https://www.gismeteo.ua/weather-odessa-4982/now/"), $arr1);
++    preg_match_all('#],"description":(.+?),"precipitation":#is', file_get_contents("https://www.gismeteo.ua/weather-odessa-4982/now/"), $arr2);
++    $temperatureAir= substr($arr[1][0], 1, -2);
++    $temperatureWater =substr($arr1[1][0], 1, -2);
++    $description = substr($arr2[1][0], 2, -2);
++    echo 'Odessa wether: ' .'temperature air: '.$temperatureAir.'°C'.' '.$description.' temperature water: '.$temperatureWater.'°C';
++
++}
++}
+\ No newline at end of file
+Index: .idea/cats.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/cats.iml b/.idea/cats.iml
+new file mode 100644
+--- /dev/null	(date 1658816188513)
++++ b/.idea/cats.iml	(date 1658816188513)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="WEB_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+Index: .idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+--- /dev/null	(date 1658816188537)
++++ b/.idea/modules.xml	(date 1658816188537)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/cats.iml" filepath="$PROJECT_DIR$/.idea/cats.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+Index: class/Auth.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Auth.php b/class/Auth.php
+new file mode 100644
+--- /dev/null	(date 1658578135945)
++++ b/class/Auth.php	(date 1658578135945)
+@@ -0,0 +1,120 @@
++<?php
++require_once 'class/User.php';
++require_once 'class/Cat.php';
++
++class Auth
++{
++    public static function register()
++    {
++        $response = [
++            'success' => false,
++            'error' => '',
++        ];
++
++        $users = User::getAll();
++        foreach ($users as $value){
++          if (isset($_POST['name'])&&isset($_POST['pass1'])&&isset($_POST['pass2'])&&isset($_POST['email'])) {
++              if ($value->user !== $_POST['name'] && $value->email !== trim($_POST['email'])) {
++
++                      if ($_POST['name']) {
++                          $pass1 = trim($_POST['pass1']);
++                          $pass2 = trim($_POST['pass2']);
++                          if (filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
++                              $email=$_POST['email'];
++
++                              if ($pass1 === $pass2) {
++                                  $name = trim($_POST['name']);
++                                  $user = new User();
++                                  $user->user = $name;
++                                  $user->email = $email;
++                                  $user->pass = md5($pass1);
++                                  $user->save();
++                                  $response['success'] = true;
++                              } else {
++                                  $response['error'] = 'ERROR! Check password!';
++                              }
++                      }else{
++                              $response['error']= 'wrong email';
++                      }
++
++                      } elseif (empty($_POST['name']) && !empty($_POST['pass1']) && $_POST['pass2']) {
++                          $response['error'] = 'Name not write';
++                      } elseif (empty($_POST['pass1']) && empty($_POST['pass2']) && $_POST['pass1'] === $_POST['pass2'] && !empty($_POST['name'])) {
++                          $response['error'] = 'Password  not write or wrong';
++                      }elseif(!isset($email)){
++                          $response['error']= 'not write email';
++                      }
++
++                  if ((isset($_POST['name']) && $value->user === $_POST['name'])) {
++                      $response['error']='this nickname is already taken sorry';
++                  }
++              } return $response;
++          }
++    }
++    }
++    public static function logIn()
++    {
++        $logIn= false;
++        $users=User::getAll();
++        foreach ($users as $user){
++            if(!empty($_COOKIE['auth_token'])){
++            if($user->auth_token===$_COOKIE['auth_token']){
++                $logIn=true;
++            }
++        }
++    }
++        return $logIn;
++    }
++    private static function generateRandomString($length = 10)
++    {
++        $characters = '0123456789#abcdefghilkmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
++        $charactersLength = strlen($characters);
++        $randomString = '';
++        for ($i = 0; $i < $length; $i++) {
++            $randomString .= $characters[rand(0, $charactersLength - 1)];
++        }
++        return $randomString;
++    }
++public static function authFromPost()
++{
++    $response = [
++        'success' => false,
++        'error' => '',
++    ];
++
++    if (isset($_POST['name'])) {
++        $users = User::getAll();
++        $name = trim($_POST['name']);
++        $pass = trim($_POST['pass']);
++        $email =trim($_POST['email']);
++        $isUserFound = false;
++        $isEmailFound = false;
++        for ($i = 0; $i < count($users); $i++) {
++            $user = $users[$i];
++            $userInputHash = md5($pass);
++            if ($user->user === $name && $user->pass === $userInputHash && $user->email === $email) {
++                $isUserFound = true;
++                $isEmailFound= true;
++                if ($user->pass) {
++                    $token = self::generateRandomString(32);
++                    $user->auth_token = $token;
++                    setcookie('auth_token', $token, time() + 60 * 60 * 24);
++                    $response['success'] = true;
++                } else {
++                    $response['error'] = "Wrong password";
++                }
++                break;
++            }
++        }
++      $user->save();
++        if (!$isUserFound) {
++            $response['error'] = 'User not found';
++        }
++        if (!$isEmailFound) {
++            $response['error'] = 'Email not found';
++        }
++    }
++
++    return $response;
++}
++}
+\ No newline at end of file
+Index: .idea/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/.gitignore b/.idea/.gitignore
+new file mode 100644
+--- /dev/null	(date 1658816189059)
++++ b/.idea/.gitignore	(date 1658816189059)
+@@ -0,0 +1,8 @@
++# Default ignored files
++/shelf/
++/workspace.xml
++# Editor-based HTTP Client requests
++/httpRequests/
++# Datasource local storage ignored files
++/dataSources/
++/dataSources.local.xml
+Index: edit_cat.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/edit_cat.php b/edit_cat.php
+new file mode 100644
+--- /dev/null	(date 1657896224499)
++++ b/edit_cat.php	(date 1657896224499)
+@@ -0,0 +1,57 @@
++<?php
++require_once 'main.php';
++$currUser = User::getCurrUser();
++$response = Cat::uploadsFoto();
++$params = $_GET;
++if (!key_exists('cat_id', $params)) {
++    echo 'Cat not found';
++    die();
++}
++$catId = $params['cat_id'];
++if (!$cat = User::getCatById($catId)) {
++    echo 'Cat not found by id: ' . $catId;
++    die();
++}
++
++if ($params = $_POST) {
++    $param = new Cat();
++    $param->cat=$params['cat'];
++    $param->age=$params['age'];
++    $param->description=$params['description'];
++    if (!empty($response['name'])){
++        $param->userFotoCat = $response['name'];
++    }else{
++        $param->userFotoCat = $cat->userFotoCat;
++    }
++    $param->id=$catId;
++    $param->update();
++    header("Location: list_cat.php");
++}
++
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++
++    <title>Document</title>
++</head>
++<body>
++
++<form method="post" enctype="multipart/form-data">
++    <p>foto cat
++        <input type="file" name="uploads[]"/><br/></p>
++    <div>
++        <input type="image" size="2" src="image/<?= $cat->userFotoCat ?>" width="100" height="100">
++    </div>
++    <input type="text" name="cat" placeholder="name cat" value="<?= $cat->cat ?>">
++    <input type="text" name="age" placeholder="age cat" value="<?= $cat->age ?>">
++    <input type="text" name="description" placeholder="description" value="<?= $cat->description ?>">
++    <br>
++    <button type="submit">Change</button>
++    <button type="button" value="user_list" onClick='location.href="list_cat.php"'>list cats</button>
++    <button type="button" onClick='location.href="index.php"'>exit</button>
++</form>
++
++</body>
++</html>
+\ No newline at end of file
+Index: user_cat.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/user_cat.php b/user_cat.php
+new file mode 100644
+--- /dev/null	(date 1658149027216)
++++ b/user_cat.php	(date 1658149027216)
+@@ -0,0 +1,30 @@
++<?php
++require_once 'main.php';
++$users= User::getAll();
++$cats= Cat::getAll();
++$currUser = $_GET["user_cats"];
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <title>Document</title>
++</head>
++<body>
++
++    <?php foreach ($users as $user): ?>
++        <?php foreach ($cats as $cat) : ?>
++            <?php  if ($currUser === $cat->userId && $currUser===$user->id): ?>
++                <?php  $comm = Comment::count($cat->id); ?>
++                <td><input type="image" size="2" src="image/<?= $cat->userFotoCat ?>" width="250" height="250"></td>
++                <br>
++                User :<?= $user->user ?>
++                Cat :<a href="cats.php?cat=<?= $cat->id ?>"> <?= $cat->cat ?></a>
++                <?=' Age cat: ' . $cat->age.'.'.'  Comment: ' .$comm.'.'?><br>
++
++
++            <?php endif; ?>
++        <?php endforeach; ?><?php endforeach; ?>
++</form>
++</body>
++</html>
+Index: list_cat.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/list_cat.php b/list_cat.php
+new file mode 100644
+--- /dev/null	(date 1657974846201)
++++ b/list_cat.php	(date 1657974846201)
+@@ -0,0 +1,49 @@
++<?php
++require_once 'main.php';
++$catData = Cat::getAll();
++$currUser = User::getCurrUser();
++cat::delete();
++?><!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <title>Document</title>
++</head>
++<body>
++
++
++<table style="border: 1px solid black;
++">
++    <thead>
++    <td>foto</td>
++    <td>name</td>
++    <td>age</td>
++    <td>description</td>
++    <td>actions</td>
++    </thead>
++    <tbody>
++
++    <?php
++    foreach ($catData as $value): ?>
++        <?php if ($value->userId === $currUser->id): ?>
++            <tr>
++                <td><input type="image" size="2" src="image/<?= $value->userFotoCat ?>" width="100" height="100"></td>
++                <td><b><a href="cats.php?cat=<?= $value->id ?>"><?= $value->cat ?></a></b></td>
++                <td><i><?= $value->age ?> </i></td>
++                <td><i><?= $value->description ?> </i></td>
++                <form action="" method="post">
++                    <td>
++                        <button name="delete" type="submit" value="<?= $value->id ?>"
++                        '>delete</button></td>
++                    <td><a href="edit_cat.php?cat_id=<?= $value->id ?>">edit</a></td>
++            </tr>
++        <?php endif ?>
++    <?php endforeach;; ?>
++    </tbody>
++</table>
++<button name="3" type="button" onClick='location.href="user.php"'>back</button>
++
++</form>
++
++</body>
++</html>
+Index: class/Comment.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Comment.php b/class/Comment.php
+new file mode 100644
+--- /dev/null	(date 1658580610805)
++++ b/class/Comment.php	(date 1658580610805)
+@@ -0,0 +1,60 @@
++<?php
++require_once'class/Dbconnection.php';
++require_once'class/BaseModel.php';
++class  Comment  extends BaseModel
++{
++    protected static $tableName = 'comment';
++    public $id;
++    public $comment;
++    public $userName;
++    public $userId;
++    public $catId;
++    public $date;
++
++    public function save()
++    {
++
++        $conn = Dbconnection::get();
++        $table = 'comment';
++        $query = "INSERT INTO $table (comment,userName,userId,catId)
++                VALUES ('$this->comment','$this->userName','$this->userId','$this->catId')";
++        $result = $conn->query($query);
++        return $result;
++
++    }
++
++    public static function commentNew()
++    {
++        $currCat = $_GET["cat"];
++        $user = User::getCurrUser();
++        if (!empty($_POST['comment'])) {
++            $comment = new Comment();
++            $comment->comment = $_POST['comment'];
++            $comment->userName = $user->user;
++            $comment->userId = $user->id;
++            $comment->catId = $currCat;
++            $comment->save();
++        }
++    }
++
++    public static function count($catId)
++    {
++        $conn = Dbconnection::get();
++        //$id = $conn->real_escape_string($userId);
++        $table = self::$tableName;
++        $query = "SELECT count(userId) FROM $table WHERE catId='$catId'";
++        $result = $conn->query($query);
++        $arrData = $result->fetch_assoc();
++        return (int)array_values($arrData)[0];
++    }
++    public static function lastComme()
++    {
++        $conn = Dbconnection::get();
++        $table = self::$tableName;
++        $query = "SELECT * FROM $table ORDER BY `date` DESC limit 3";
++        $result = $conn->query($query);
++        $arrData = $result->fetch_assoc();
++
++        return $arrData;
++    }
++}
+Index: class/Dbconnection.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Dbconnection.php b/class/Dbconnection.php
+new file mode 100644
+--- /dev/null	(date 1657537180373)
++++ b/class/Dbconnection.php	(date 1657537180373)
+@@ -0,0 +1,14 @@
++<?php
++class Dbconnection
++{
++    private static  $_connection = false;
++
++    public static function get()
++    {
++        if (!self::$_connection){
++            self::$_connection = new mysqli('localhost','root','', 'cat');
++        }
++     return self::$_connection;
++    }
++}
++
+Index: cats.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cats.php b/cats.php
+new file mode 100644
+--- /dev/null	(date 1658054830279)
++++ b/cats.php	(date 1658054830279)
+@@ -0,0 +1,47 @@
++<?php
++require_once 'main.php';
++$user = User::getAll();
++$cats =Cat::getAll();
++$user= User::getCurrUser();
++$curruser=user::getCurrUser();
++$currCat = $_GET["cat"];
++if (!empty($_POST['comment'])) {
++    Comment::commentNew();}
++$com= Comment::getAll();
++Comment::delete();
++
++
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++
++    <title>Document</title>
++</head>
++<body>
++<form action="" method="post">
++    <?php foreach ($cats as $cat) : ?>
++        <?php if ($cat->id === $currCat): ?>
++            <td><input type="image" size="2" src="image/<?= $cat->userFotoCat ?>" width="250" height="250"></td>
++            <br>
++            <?='Name cat: ' . $cat->cat.'.' . ' Age cat: ' . $cat->age.'.' . ' description: ' .$cat->description?><br>
++        <?php endif; ?>
++    <?php endforeach; ?>
++    <?php foreach ($com as $comment) : ?>
++        <?php  if (($_GET['cat'] === $comment->catId)): ?><br>
++            <?php  echo 'Name: ' . $comment->userName.'. '. 'Comment:   ' .$comment->comment ; ?>
++           <?php if($user->id === $comment->userId ):?>
++                <br>  <button name="delete" type="submit" value="<?= $comment->id ?>"'>delete</button>
++        <?php endif; ?>
++     <?php endif; ?><?php endforeach; ?>
++    <br> <label for="story">Write your comment:</label><br>
++        <textarea id="story" name="comment"
++                  rows="5" cols="33">
++</textarea><br>
++        <button type="submit"  onClick='location.href="cats.php"'>add comment</button>
++
++    <button type="button" value="back" onClick='location.href="index.php"'>back</button>
++    </form>
++</body>
++</html>
+Index: class/Cat.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Cat.php b/class/Cat.php
+new file mode 100644
+--- /dev/null	(date 1657892002856)
++++ b/class/Cat.php	(date 1657892002856)
+@@ -0,0 +1,90 @@
++<?php
++require_once 'class/BaseModel.php';
++require_once 'class/User.php';
++class Cat extends BaseModel
++{
++    public $id;
++    public $cat;
++    public $age;
++    public $description;
++    public $userFotoCat;
++    public $userId;
++    public $date;
++
++    protected static $tableName = 'cat';
++
++    public static function userCat()
++    {
++        if (!empty($_POST["cat"]) && !empty($_POST["age"]) && !empty($_POST["description"])) {
++            $currUser = User::getCurrUser();
++            $name = $_POST["cat"];
++            $age = $_POST["age"];
++            $userFotoCat = self::uploadsFoto();
++            $userFotoCat = $userFotoCat['name'];
++            $description = $_POST["description"];
++            $cat = new Cat();
++                $cat->cat = $name;
++               $cat->age = $age;
++              $cat->description = $description;
++               $cat->userId = $currUser->id;
++              $cat->userFotoCat = $userFotoCat;
++
++            $cat->save();
++        }
++    }
++    public static function uploadsFoto()
++    {
++        $response = [
++            'success' => false,
++            'error' => false,
++            'name' => ''
++        ];
++        if (!empty($_POST["cat"]) && !empty($_POST["age"]) && !empty($_POST["description"])) {
++            foreach ($_FILES["uploads"]["error"] as $key => $error) {
++                if ($error == UPLOAD_ERR_OK) {
++                    $tmp_name = $_FILES["uploads"]["tmp_name"][$key];
++                    $name = $_FILES["uploads"]["name"][$key];
++                    $response['name'] = $name;
++                    $fileNameCmps = explode(".", $name);
++                    $fileExtension = strtolower(end($fileNameCmps));
++                    $allowedfileExtensions = array('jpg', 'gif', 'png');
++
++                    if (in_array($fileExtension, $allowedfileExtensions)) {
++                        move_uploaded_file($tmp_name, "image/$name");
++                        $response ['success'] = true;
++                    } else {
++                        $response ['error'] = true;
++                    }
++
++
++                }
++            }
++
++        }
++return $response;
++    }
++    public function save()
++    {
++        $conn = Dbconnection::get();
++        $table = static::$tableName;
++            $query = "INSERT INTO $table (cat, age,description,userFotoCat,userId)
++                VALUES ('$this->cat','$this->age','$this->description','$this->userFotoCat','$this->userId')";
++            $result = $conn->query($query);
++            return $result;
++    }
++       public function update()
++    {
++        $conn = Dbconnection::get();
++        $table = static::$tableName;
++        $query = "UPDATE $table SET cat='$this->cat',
++                                   age='$this->age',
++                                    description='$this->description',
++                                    userFotoCat='$this->userFotoCat'
++                                        WHERE id= $this->id";
++        $result = $conn->query($query);
++            return $result;
++        }
++
++
++
++}
+\ No newline at end of file
+Index: class/User.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/User.php b/class/User.php
+new file mode 100644
+--- /dev/null	(date 1658137962565)
++++ b/class/User.php	(date 1658137962565)
+@@ -0,0 +1,70 @@
++<?php
++require_once 'class/BaseModel.php';
++require_once 'class/Cat.php';
++class User extends BaseModel
++{
++    public $id;
++    public $user;
++    public $email;
++    public $pass;
++    public $auth_token;
++    public $date;
++
++    protected static $tableName='user';
++
++    public static function getCurrUser()
++    {
++        if (!isset($_COOKIE['auth_token'])) {
++            return false;
++        } else {
++            $token = $_COOKIE['auth_token'];
++            $users = self::getAll();
++            $isUserFound = false;
++            foreach ($users as $user) {
++                if ($user->auth_token === $token) {
++                    $isUserFound = true;
++                    return $user;
++                }
++            }
++            if (!$isUserFound) {
++                return false;
++            }
++        }
++    }
++    public function save()
++    {
++        $conn= Dbconnection::get();
++        $table = static::$tableName;
++            $query="INSERT INTO $table (user, email, pass, auth_token)
++                VALUES ('$this->user','$this->email','$this->pass','$this->auth_token')";
++            $result= $conn->query($query);
++            return $result;
++        }
++
++        public function update()
++    {
++        $conn= Dbconnection::get();
++        $table = static::$tableName;
++            $query= "UPDATE $table SET user='$this->user',
++                                    email='$this->email',
++                                   pass='$this->pass',
++                                    auth_token='$this->auth_token'
++                                        WHERE id= $this->id";
++            $result=$conn->query($query);
++            return $result;
++        }
++
++    public static function getCatById($catId)
++    {
++        $currUser = User::getCurrUser();
++
++        $cats = Cat::getAll();
++        foreach ($cats as $cat) {
++            if ($cat->id === $catId && $currUser->id === $cat->userId
++            ) {
++                return $cat;
++            }
++        }
++        return null;
++    }
++}
+\ No newline at end of file
+Index: index.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/index.php b/index.php
+new file mode 100644
+--- /dev/null	(date 1658589881927)
++++ b/index.php	(date 1658589881927)
+@@ -0,0 +1,59 @@
++<?php
++require_once 'main.php';
++$users= User::getAll();
++$cats= Cat::getAll();
++$errorMessage = false;
++$successMessage = false;
++$response = Auth::authFromPost();
++$com=Comment::lastComme();
++$ca=Cat::get($com["catId"]);
++
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <title>Document</title>
++</head>
++<body>
++
++<?php if ($errorMessage = $response['error']): ?>
++    <p><?= $errorMessage ?></p>
++<?php endif; ?>
++
++<?php if ($response['success']): ?>
++    <p><?php header("Location: user.php");
++        exit(); ?></p>
++<?php endif; ?>
++<?= Other::currency() ?><br>
++<?= Other::wether() ?>
++<form action="" method="post">
++    <p>Name:<input type="text" name="name"></p>
++    <p>email:<input type="text" name="email"></p>
++    <p>Password:<input type="password" name="pass"></p>
++    <button type="submit" >Login</button>
++    <button type="button" value="register" onClick='location.href="register.php"'>register</button>
++
++    <p>last comment <br>
++    <textarea name="textarea"
++              rows="5" cols="30"
++              readonly><?= 'name cat: '.$ca->cat.'.'.' comment: '.$com["comment"]?></textarea><br></p>
++    <?php foreach ($users as $user): ?>
++        <?php foreach ($cats as $cat) : ?>
++            <?php  if ($user->id === $cat->userId): ?>
++                 <?php  $comm = Comment::count($cat->id); ?>
++                <?php $rating = Rating::sumRating($cat->id); ?>
++                <td><input type="image" size="2" src="image/<?= $cat->userFotoCat ?>" width="250" height="250"></td>
++                <br>
++                User :<a href="user_cat.php?user_cats=<?= $user->id ?>"> <?= $user->user ?></a>
++                Cat :<a href="cats.php?cat=<?= $cat->id ?>"> <?= $cat->cat ?></a>
++                Vote:<a href="reting.php?cat_rating=<?= $cat->id ?>&rating=<?= 1 ?>"> +1</a> /
++                <a href="reting.php?cat_rating=<?= $cat->id ?>&rating=<?= -1 ?>">  -1</a>
++                <?=' Age cat: ' . $cat->age.'. '.' public: ' .$cat->date.'.'.'  Comment: ' .$comm.'.'.'  Rating: ' .$rating?><br>
++
++
++            <?php endif; ?>
++        <?php endforeach; ?><?php endforeach; ?>
++</form>
++</body>
++</html>
+Index: main.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.php b/main.php
+new file mode 100644
+--- /dev/null	(date 1658586630904)
++++ b/main.php	(date 1658586630904)
+@@ -0,0 +1,68 @@
++<?php
++require_once 'class/Cat.php';
++require_once 'class/BaseModel.php';
++require_once 'class/Dbconnection.php';
++require_once 'class/User.php';
++require_once 'class/Auth.php';
++require_once 'class/Comment.php';
++require_once 'class/Rating.php';
++require_once 'class/Other.php';
++
++$users =User::getAll();
++$currUser = User::getCurrUser();
++$login = Auth::logIn();
++//ini_set('display_errors', 0);
++//ini_set('display_startup_errors', 0);
++//error_reporting(E_ALL);
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
++
++    <?php    if($login !== true):?>
++    <nav class="navbar navbar-expand-lg bg-light">
++        <div class="container-fluid">
++            <div class="collapse navbar-collapse" id="navbarSupportedContent">
++                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="index.php">Home</a>
++                    </li>
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="index.php">log in</a>
++                    </li>
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="register.php">register</a>
++                    </li>
++                    </li>
++                </ul>
++            </div>
++        </div>
++    </nav>
++    <?php else:?>
++    <nav class="navbar navbar-expand-lg bg-light">
++        <div class="container-fluid">
++            <div class="collapse navbar-collapse" id="navbarSupportedContent">
++                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="index.php">Home</a>
++                    </li>
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="list_cat.php">my cat</a>
++                    </li>
++                    <li class="nav-item">
++                        <a class="nav-link active" aria-current="page" href="user.php">my profile</a>
++                    </li>
++                    </li>
++                </ul>
++            </div>
++        </div>
++    </nav>
++    <?php endif;?>
++    <title>Document</title>
++</head>
++<body>
++
++</body>
++</html>
+Index: edit_user.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/edit_user.php b/edit_user.php
+new file mode 100644
+--- /dev/null	(date 1658495393495)
++++ b/edit_user.php	(date 1658495393495)
+@@ -0,0 +1,59 @@
++<?php
++require_once 'main.php';
++
++$currUser = User::getCurrUser();
++$params = $_GET;
++if (!key_exists('user_id', $params)) {
++    echo 'Cat not found';
++    die();
++}
++$UserId = $params['user_id'];
++if (!$user = User::getCurrUser($UserId)) {
++    echo 'Cat not found by id: ' . $UserId;
++    die();
++}
++if ($params = $_POST) {
++if (!empty($params['old_password'])){
++$pass1 = trim($params['pass3']);
++$pass2 = trim($params['pass4']);
++if (filter_var($_POST['email1'], FILTER_VALIDATE_EMAIL)) {
++    $email = $_POST['email1'];
++    if ($currUser->pass === md5($params['old_password'])) {
++        if ($pass1 === $pass2) {
++            $param = new User();
++            $param->user = $params['name1'];
++            $param->email = $params['email1'];
++            $param->pass = md5($pass1);
++            $param->auth_token = $currUser->auth_token;
++            $param->id = $UserId;
++            $param->update();
++            header("Location: user.php");
++        }else echo 'Repeat new  password';
++    }  else echo 'Wrong old password';
++}else echo 'Repeat email';
++}
++}
++
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++
++    <title>Document</title>
++</head>
++<body>
++<form action="" method="post" >
++    <p>old password:<input type="text" name="old_password" placeholder="password"><br></p>
++
++    <br>
++    <p>new login:<input type="text" name="name1" placeholder="name" value="<?= $currUser->user ?>"><br></p>
++    <p> new email<input type="text" name="email1" placeholder="email" value="<?=$currUser->email ?>"><br></p>
++    <p>new password<input type="text" name="pass3" ><br></p>
++    <p> Repeat password<input type="text" name="pass4" ></p>
++    <br>
++    <button type="submit">Change</button>
++</form>
++
++</body>
++</html>
+\ No newline at end of file
+Index: class/Rating.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/Rating.php b/class/Rating.php
+new file mode 100644
+--- /dev/null	(date 1658500490093)
++++ b/class/Rating.php	(date 1658500490093)
+@@ -0,0 +1,71 @@
++<?php
++require_once'class/Dbconnection.php';
++require_once'class/BaseModel.php';
++class Rating extends BaseModel
++{
++    public $id_user;
++    public $id_cat;
++    public $rating;
++
++    protected static $tableName = 'rating';
++
++    public function save()
++    {
++
++        $conn = Dbconnection::get();
++        $table = self::$tableName;
++        $query = "INSERT INTO $table (id_user,id_cat,rating)
++                VALUES ('$this->id_user','$this->id_cat','$this->rating')";
++        $result = $conn->query($query);
++        return $result;
++
++    }
++
++    public static function userRating()
++
++    {
++        $user = User::getCurrUser();
++        $conn = Dbconnection::get();
++        $table = self::$tableName;
++        $query = "SELECT id_user FROM $table WHERE id_user='$user->id'";
++        $result = $conn->query($query);
++        $arrData = $result->fetch_assoc();
++        if (!empty($arrData["id_user"])){
++        return $arrData["id_user"];}
++    }
++    public static function update($ret,$currCat)
++    {
++        $currating=self::userRating();
++        $conn= Dbconnection::get();
++        $table = static::$tableName;
++        $query= "UPDATE $table SET rating=$ret,
++                                    id_cat=$currCat
++                                        WHERE id_user= $currating";
++        $result=$conn->query($query);
++        return $result;
++    }
++    public static function curRating($cat)
++
++    {
++        $user = User::getCurrUser();
++        $conn = Dbconnection::get();
++        $table = self::$tableName;
++        $query = "SELECT rating FROM $table WHERE id_user='$user->id'AND id_cat=$cat";
++        $result = $conn->query($query);
++        $arrData = $result->fetch_assoc();
++         if (!empty($arrData["rating"])){
++            return $arrData["rating"];}
++    }
++    public static function sumRating($catId)
++
++    {
++        $conn = Dbconnection::get();
++        $table = self::$tableName;
++        $query = "select sum(rating) from $table where id_cat= $catId ;";
++        $result = $conn->query($query);
++        $arrData = $result->fetch_assoc();
++        if (!empty($arrData["sum(rating)"])) {
++            return $arrData["sum(rating)"];}
++
++    }
++}
+\ No newline at end of file
+Index: class/BaseModel.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/class/BaseModel.php b/class/BaseModel.php
+new file mode 100644
+--- /dev/null	(date 1658048866641)
++++ b/class/BaseModel.php	(date 1658048866641)
+@@ -0,0 +1,58 @@
++<?php
++require_once'class/Auth.php';
++require_once'class/Dbconnection.php';
++class BaseModel
++{
++    protected $_isNew=true;
++    protected static $tableName;
++
++    public static function get($id)
++    {
++        $conn= Dbconnection::get();
++        $id = $conn->real_escape_string($id);
++        $table= static::$tableName;
++        $query = "SELECT * FROM $table WHERE id='$id'";
++        $result = $conn->query($query);
++        $arrData= $result->fetch_assoc();
++        $user= static::arrayToObject($arrData);
++        return $user;
++    }
++    public static function getAll()
++    {
++        $conn=Dbconnection::get();
++        $table= static::$tableName;
++        $query="SELECT * FROM $table";
++        $result = $conn->query($query);
++        $user = [] ;
++        $arrData = $result->fetch_assoc();
++        while ($arrData){
++            $user[]=static::arrayToObject($arrData);
++            $arrData= $result->fetch_assoc();
++        }
++        return $user;
++
++    }
++
++    protected static function arrayToObject($data)
++    {
++
++        $entity= new static();
++        foreach ($data as $key=>$value){
++            $entity->$key=$value;
++        }
++        $entity->_isNew=false;
++        return $entity;
++
++    }
++    public static function delete()
++    {
++        if (isset( $_POST['delete']))
++        {$delete = $_POST['delete'];
++        $conn= Dbconnection::get();
++        $table= static::$tableName;
++        $query="DELETE FROM $table WHERE id='$delete'";
++        $result = $conn->query($query);
++        return $result;}
++
++    }
++}
+\ No newline at end of file
+Index: reting.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/reting.php b/reting.php
+new file mode 100644
+--- /dev/null	(date 1658491748113)
++++ b/reting.php	(date 1658491748113)
+@@ -0,0 +1,28 @@
++<?php
++require_once 'main.php';
++require_once 'class/Rating.php';
++$user = User::getCurrUser();
++$currCat = $_GET["cat_rating"];
++$rati = $_GET["rating"];
++$userRating=Rating::userRating();
++$curRating = Rating::curRating($currCat);
++$allRatings= Rating::getAll();
++foreach ($allRatings as $ratin){
++if($curRating===$rati&&$ratin->id_cat===$currCat){
++    $rati = 0;
++}
++}
++if ($userRating !== $user->id){
++        $rating = new rating();
++        $rating->id_user = $user->id;
++        $rating->id_cat = $currCat;
++            $rating->rating = $rati;
++            $rating->save();
++            header("Location: index.php");
++    }
++else{Rating::update($rati,$currCat); header("Location: index.php");}
++
++
++
++
++
+Index: user.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/user.php b/user.php
+new file mode 100644
+--- /dev/null	(date 1658136329260)
++++ b/user.php	(date 1658136329260)
+@@ -0,0 +1,38 @@
++<?php
++require_once 'main.php';
++$currUser = User::getCurrUser();
++$message = Cat::uploadsFoto();
++Cat::userCat();
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++
++    <title>Document</title>
++</head>
++<body>
++
++<?php if($currUser):?>
++    <p>Hello...<?=$currUser->user?></p>
++<?php endif;?>
++<?php if($message['success'] == true):?>
++    <p>Done</p>
++<?php endif;?>
++<?php if($message['error'] == true):?>
++    <p>Error</p>
++<?php endif;?>
++<form method="post" enctype="multipart/form-data">
++    <p>foto cat
++        <input type="file" name="uploads[]" /><br /></p>
++    <input type="text" name="cat" placeholder="name cat">
++    <input type="text" name="age" placeholder="age cat">
++    <input type="text" name="description" placeholder="description">
++    <br>
++    <button type="submit">add</button>
++    <button type="button" value="user_list" onClick='location.href="list_cat.php"'>list cats</button>
++    <button type="button" value="user_list" onClick='location.href="edit_user.php?user_id=<?= $currUser->id ?>"'>edit profile</button>
++</form>
++
++</body>
++</html>
+\ No newline at end of file
+Index: register.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/register.php b/register.php
+new file mode 100644
+--- /dev/null	(date 1658494670308)
++++ b/register.php	(date 1658494670308)
+@@ -0,0 +1,29 @@
++<?php
++require_once 'main.php';
++$response = Auth::register();
++
++?>
++<!doctype html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++
++    <title>Document</title>
++</head>
++<body>
++<?php if (isset($response['error'])):?>
++    <p><?=$response['error']?></p>
++<?php endif;?>
++<?php if (!empty($response['success'])):?>
++    <p><?php header("Location: index.php"); ?></p>
++<?php endif;?>
++<form action="" method="post">
++    <p>Name:<input type="text" name="name"></p>
++    <p>email:<input type="text" name="email"></p>
++    <p>Password:<input type="password" name="pass1"></p>
++    <p>Repeat password:<input type="password" name="pass2"></p>
++    <button type="submit">register</button>
++    <button type="button" value="back" onClick='location.href="index.php"'>back</button>
++</form>
++</body>
++</html>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1658818446806)
++++ b/.idea/vcs.xml	(date 1658818446806)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
