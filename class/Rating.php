@@ -73,7 +73,7 @@ class Rating extends BaseModel
         $conn=Dbconnection::get();
         $table= self::$tableName;
         $query="SELECT id_cat, SUM(rating) as total_rating FROM rating
-GROUP BY id_cat  order by total_rating DESC LIMIT 10";
+GROUP BY id_cat  order by total_rating DESC LIMIT 10;";
         $result = $conn->query($query);
         $rating = [] ;
         $arrData = $result->fetch_assoc();

@@ -5,6 +5,7 @@ $cats= Cat::getAll();
 $com=Comment::lastComme();
 $ca=Cat::get($com["catId"]);
 $top = Rating::top10();
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -13,11 +14,11 @@ $top = Rating::top10();
     <title>Document</title>
 </head>
 <body>
+<?php foreach ($top as $top10) : ?>
 <?php foreach ($users as $user): ?>
     <?php foreach ($cats as $cat) : ?>
-        <?php  if ($user->id === $cat->userId): ?>
-            <?php foreach ($top as $top10) : ?>
-                <?php   if ($top10->id_cat === $cat->id): ?>
+                <?php  if ($top10->id_cat === $cat->id): ?>
+            <?php  if ($user->id === $cat->userId): ?>
                     <?php  $comm = Comment::count($cat->id); ?>
                     <?php $rating = Rating::sumRating($cat->id); ?>
                     <td><input type="image" size="2" src="image/<?= $cat->userFotoCat ?>" width="250" height="250"></td>
@@ -30,8 +31,8 @@ $top = Rating::top10();
                     <br>
 
 
-                <?php endif?>
-            <?php endforeach?><?php endif?><?php endforeach?><?php endforeach?>
+                <?php endif?><?php endif?>
+            <?php endforeach?><?php endforeach?><?php endforeach?>
 </form>
 </body>
 </html>
