@@ -3,6 +3,7 @@ require_once 'main.php';
 $users= User::getAll();
 $cats= Cat::getAll();
 $currUser = $_GET["user_cats"];
+var_dump();
 ?>
 <!doctype html>
 <html lang="en">
